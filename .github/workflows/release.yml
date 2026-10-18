@@ -1,4 +1,6 @@
-# Publishes on a version tag (v1.2.3) with npm provenance.
+# Publishes on a version tag (v1.2.3) with npm provenance and creates the
+# matching GitHub Release (auto-generated notes; CHANGELOG.md is the
+# curated record).
 #
 # Auth: npm "trusted publishing" (OIDC) — configure the package on
 # npmjs.com → Settings → Trusted publisher → this repo + workflow file
@@ -10,8 +12,8 @@ on:
   push:
     tags: ["v*"]
 permissions:
-  contents: read
-  id-token: write
+  contents: write # GitHub Release
+  id-token: write # npm provenance
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -47,3 +49,9 @@ jobs:
         run: pnpm publish --access public --provenance --no-git-checks
         # env:
         #   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
+            || gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
