@@ -1,0 +1,72 @@
+{
+	"name": "@type9/sf6-frame-meter",
+	"version": "0.1.0",
+	"description": "Read the Street Fighter 6 replay viewer's on-screen frame meter out of a video and turn it into a semantic frame timeline.",
+	"license": "MIT",
+	"private": false,
+	"type": "module",
+	"sideEffects": false,
+	"keywords": [
+		"street-fighter-6",
+		"sf6",
+		"frame-data",
+		"frame-meter",
+		"fighting-games",
+		"ffmpeg",
+		"video-analysis"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/type9/sf6-frame-meter.git"
+	},
+	"homepage": "https://github.com/type9/sf6-frame-meter#readme",
+	"bugs": {
+		"url": "https://github.com/type9/sf6-frame-meter/issues"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"exports": {
+		".": "./src/index.ts",
+		"./lib/*": "./src/lib/*.ts"
+	},
+	"publishConfig": {
+		"access": "public",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"./lib/*": {
+				"types": "./dist/lib/*.d.ts",
+				"default": "./dist/lib/*.js"
+			}
+		},
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts"
+	},
+	"scripts": {
+		"build": "tsup",
+		"type-check": "tsc --noEmit",
+		"lint": "eslint ./src/**/*.ts --fix",
+		"run": "tsx ./src/scripts/run.ts"
+	},
+	"peerDependencies": {
+		"ffmpeg-static": ">=5"
+	},
+	"peerDependenciesMeta": {
+		"ffmpeg-static": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/node": "^20",
+		"@typescript-eslint/parser": "^6.21.0",
+		"tsup": "^8.5.0",
+		"tsx": "^4.20.6",
+		"typescript": "^5.7.3"
+	}
+}

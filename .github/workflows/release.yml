@@ -1,0 +1,49 @@
+# Publishes on a version tag (v1.2.3) with npm provenance.
+#
+# Auth: npm "trusted publishing" (OIDC) — configure the package on
+# npmjs.com → Settings → Trusted publisher → this repo + workflow file
+# name. No long-lived NPM_TOKEN is needed; `id-token: write` is what
+# lets npm verify the run. Until trusted publishing is configured, add
+# an NPM_TOKEN secret and uncomment the env line.
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/check-boundaries.mjs .
+      - run: pnpm run build
+      - name: tag matches package.json version
+        run: |
+          PKG="$(node -p "require('./package.json').version")"
+          [ "v$PKG" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != package.json v$PKG"; exit 1; }
+      - name: already published?
+        id: published
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          PKG="$(node -p "require('./package.json').version")"
+          if npm view "$NAME@$PKG" version >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "$NAME@$PKG is already on npm — skipping publish"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      # pnpm (not npm) so publishConfig.exports/main/types are applied.
+      - if: steps.published.outputs.skip == 'false'
+        run: pnpm publish --access public --provenance --no-git-checks
+        # env:
+        #   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
